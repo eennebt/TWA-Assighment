@@ -1,0 +1,44 @@
+function formValidation(){
+  if( checkSurname()){
+        return true;
+  }else {
+    return false;
+
+  }
+
+
+}
+
+
+function checkNotEmpty(element){
+var val_len = element.value.length;
+if(val_len == 0 || element.value == null){
+  element.focus();
+  return false;
+}
+return true;
+}
+
+function checkSurname() {
+var sname = document.getElementById("Surname");
+var error2 = document.getElementById("error2");
+if(!checkNotEmpty(sname)){
+  showError(error2);
+  sname.focus();
+  return false;
+}
+if(!checktextChoice(sname)){
+showError(error2);
+  return false;
+}
+error2.innerHTML = " ";
+return true;
+
+}
+
+//error show
+function showError(e1){
+  e1.innerHTML = " Not valid input";
+  return false;
+}
+

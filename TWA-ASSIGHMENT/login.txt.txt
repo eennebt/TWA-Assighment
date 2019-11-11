@@ -1,0 +1,104 @@
+<?php
+   // tell the browser not to cache the page
+   header("Cache-Control: no-cache");
+   // expire the page as soon as it is loaded
+   header("Expires: -1");
+
+
+$errorMessage = '';
+
+if(isset($_POST["error"])){
+  $errorMessage = $_POST["error"];
+}
+
+if(isset($_POST['submit'])){
+  if(($_POST['username'] || $_POST['pword']) == ''){
+    $errorMessage = " BOTH ARE REQUIRED";
+  }else{
+require_once('dbconn.php');
+
+$uname = $dbConn->escape_string($_POST['username']);
+
+$password = $dbConn->escape_string($_POST['pword']);
+$hashsedpass = hash('sha256',$password );
+$sql = "SELECT * FROM staff WHERE employee_id = '$uname' and password = '$hashsedpass'";
+
+$rs = $dbConn->query($sql);
+
+  if ($rs->num_rows) {
+session_start();
+$user = $rs->fetch_assoc();
+$_SESSION["Fname"] = $user["firstname"];
+$_SESSION["Sname"] = $user["surname"];
+$_SESSION["username"] = $uname;
+$_SESSION["pword"] = $hashedpass;
+	$user = $rs->fetch_assoc();
+  header('Location: http://tl28serv.uws.edu.au/twa/twa039/assignment1/findpatient.php');
+   exit();
+ }else {
+   $errorMessage = "INVALID USERAME or PASS";
+ }
+
+
+
+    $dbConn->close();
+  }
+
+
+}
+
+
+
+
+
+ ?>
+
+
+<!DOCTYPE html>
+
+<html lang="en" dir="ltr">
+  <head>
+    <link rel='stylesheet' type='text/css' href='http://tl28serv.uws.edu.au/twa/twa039/assignment1/patient.css' />
+<harset="utf-8">
+ 
+    
+    
+    
+    <title>By Elias Ennebt~18391679 </title>
+  </head>
+  <h1>Glebe Family Medical Practice Patients Record Application</h1>
+  <body>
+    <div class="intro">
+      <p> Note: This Intrante Application is for the use of  Glebe Family Medical Practice only. Patient information accessed bia this System </p>
+      <p>Staff logging into this system are reminded of their legal responsibilityt to maintain patient confidentiality at all times</p>
+      <p>Information stored within this system may not be shared with external entitites without the consent of the treating doctor</p>
+      <p>By logging into this system, I agree to be bound by this requirement</p>
+
+    </div>
+<div class="text">
+<form class="" action="" method="post">
+
+
+<div class="">
+  <label for="username">EmployeeID:</label>
+  <input type="text" name="username" value="" id="username">
+<span class="wrong"> <?php echo $errorMessage ?> </span>
+</div>
+<div class="">
+  <label for="pword">Password:</label>
+  <input type="password" name="pword" value="" id="pword">
+</div>
+<br>
+<div class="">
+<input type="submit" name="submit" value="submit">
+</div>
+
+
+</form>
+
+
+</div>
+
+
+  </body>
+</html>

@@ -1,0 +1,210 @@
+<?php 
+   // tell the browser not to cache the page
+   header("Cache-Control: no-cache");
+   // expire the page as soon as it is loaded
+   header("Expires: -1");
+   
+session_start(); 
+$name = "";
+$ERROR = "";
+$name = $_SESSION["username"];
+ ?>
+
+<?php if(!$name): ?>
+<?php 
+$error= "Unauthorised Access";
+header("location: logoff.php?error=$error");
+exit();
+
+?>
+
+
+<?php else: ?>
+
+<?php
+$ERROR = "";
+$patient_id = $_GET['patient_id'];
+
+require_once('dbconn.php');
+ 
+$dbConn->query("SET SQL_BIG_SELECTS=1");
+
+$sql =  "SELECT patient.patient_id, patient.surname, patient.firstname, patient.email, patient.postal_address, patient.dob,
+ consultation.patient_id, consultation.diagnosis, consultation.consult_date, consultation.notes, consultation.treatment
+FROM patient INNER JOIN consultation ON patient.patient_id = consultation.patient_id
+WHERE consultation.patient_id='$patient_id'";
+
+$results = $dbConn->query($sql) or die( $dbConn->error);
+
+$NOTESVALIDATION = "/^[(a-z)(A-Z)(0-9)(\s)(\-)(\,)(\.)(\!)]+$/";
+
+
+if(isset($_POST["submit"])){
+require_once('dbconn.php');
+
+if($_POST['notes'] == ''){
+$ERROR = " Note Cannot be empty";
+
+}else {
+
+
+
+if(preg_match($NOTESVALIDATION, $_POST['notes'])){
+
+$note = trim($dbConn->escape_string($_POST['notes']));
+$patientD =  trim($dbConn->escape_string($_POST['patient']));
+$treatmen = trim($dbConn->escape_string($_POST['treat']));
+$diagno= trim($dbConn->escape_string($_POST['diag']));
+$DATE = trim($dbConn->escape_string( $_POST['Date']));
+
+$mysqltime =  date("Y-m-d");
+$ERROR = "";
+$sql = "INSERT INTO consultation (patient_id, treatment, diagnosis, notes, consult_date) VALUES ('$patientD','$treatmen', '$diagno','$note', '$mysqltime')";
+$results = $dbConn->query($sql) or die( $dbConn->error);
+$dbConn->close();
+header('Location: http://tl28serv.uws.edu.au/twa/twa039/assignment1/patientrecord.php?patient_id='. $patientD);
+
+
+
+exit();
+} else{
+
+$ERROR = "Not a valid input";
+
+}
+
+}
+}
+
+
+ ?>
+
+ <!DOCTYPE html>
+<html lang="en" dir="ltr">
+ <link rel='stylesheet' type='text/css' href='patient.css' />
+
+  <head>
+    <meta charset="utf-8">
+    <title>By Elias Ennebt~18391679 </title>
+  </head>
+  <body>
+   <header>
+    <nav>
+      <ul>
+        <li id="user1">Logged in user: <?php echo $_SESSION["Fname"] ?> <?php echo $_SESSION["Sname"] ?></li>
+        <li id="date1">Date: <?php echo date("Y.m.d") ?></li>
+      </ul>
+    </nav>
+  </header>
+  
+
+
+<?php if($results->num_rows > 0):?>
+<form class="" action="<?php echo ($_SERVER['PHP_SELF'] . '?' . $_SERVER['QUERY_STRING'])   ; ?>" method="post">
+
+
+  <h1>PATIENT DETAILS</h1>
+  <table>
+  	<tr>
+  	<th> Patient ID </th>
+  	<th> First Name </th>
+  	<th> Last Name </th>
+  	<th> D.O.B </th>
+    	<th> Email </th>
+    	<th> postal_address </th>
+    	<th> Date</th>
+  	<th> Notes </th>
+  	<th> Treatment </th>
+  	<th> Diagnosis </th>
+  	</tr>
+
+
+
+  <?php while ($row = $results->fetch_assoc()): ?>
+ <tr>
+  	<td><?php echo $row["patient_id"]?></td>
+      	<td><?php echo $row["firstname"]?></td>
+      	<td><?php echo $row["surname"]?></td>
+      	<td><?php echo $row["dob"]?></td>
+      	<td><?php echo $row["email"]?></td>
+	<td><?php echo $row["postal_address"]?></td>
+        <td><?php echo $row["consult_date"]?></td>
+  	<td><?php echo $row["notes"]?></td>
+  	<td><?php echo $row["treatment"]?></td>
+  	<td><?php echo $row["diagnosis"]?></td>
+
+  <?php endwhile; ?>
+
+
+  </tr>
+
+  </table>
+
+<?php else: ?>
+
+<?php
+if(isset($_POST["submit"]))
+ echo $patient_id;
+ ?>
+
+<p>There is no one with that name</p>
+
+<?php endif ?>
+<?php
+$dbConn->close();
+?>
+
+
+
+<fieldset>
+
+
+
+
+<div class="">
+  <label for="patient">PATIENTID</label><input type="text" value="<?php echo $patient_id ?>" name="patient" id="patient">
+</div>  
+<div class="">
+<label for="Date">Consultation-Date</label> <input type="text" name="Date" value="<?php echo date("Y-m-d") ?>"id="Date" disabled>
+</div> 
+
+<div class="">
+<label for="NOTES" id="notes">Consultastion NOTES </label><input type="text" name="notes" value="" id="notes">
+<span class="wrong"> <?php echo $ERROR; ?></span>
+</div>
+
+
+<div class="">
+<label for="diag">Diagnosis</label> <input type="text" name="diag" value="" id="diag">
+</div>
+
+<div class="">
+<label for="treat">Treatment</label> <input type="text" name="treat" value="" id="treat">
+</div>
+
+
+
+<div>
+<input type="submit" name="submit" value="submit" id="submit">
+
+<a href="findpatient.php"> 
+  <input type="button" value="Find Patient"/> 
+</a>
+
+<a href="logoff.php">
+ <input type="button" value="Logoff"/>
+</a>
+</div>
+
+
+
+
+
+</form>
+
+
+</fieldset>
+
+  </body>
+</html>
+<?php endif ?>
